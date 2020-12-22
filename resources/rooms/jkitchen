@@ -1,0 +1,2 @@
+{:desc "You find yourself in a room with rount table in the middle."
+ :exits {:west :idiningroom :east :khallway}}

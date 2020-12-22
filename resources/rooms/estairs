@@ -1,0 +1,2 @@
+{:desc "You are stay in front of long stairs."
+ :exits {:north :battic :east :fsittingroom}}
