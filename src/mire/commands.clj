@@ -1,7 +1,7 @@
 (ns mire.commands
-  (:require [clojure.string :as str]
-            [mire.rooms :as rooms]
-            [mire.player :as player]))
+  (:use [mire.rooms :only [rooms room-contains?]]
+        [mire.player])
+  (:use [clojure.string :only [join]]))
 
 (defn- move-between-refs
   "Move one instance of obj between from and to. Must call in a transaction."
@@ -9,65 +9,85 @@
   (alter from disj obj)
   (alter to conj obj))
 
+(defn- move-delete
+  [obj from]
+  (alter from disj obj))
+
+
+
+
 ;; Command functions
 
 (defn look
   "Get a description of the surrounding environs and its contents."
   []
-  (str (:desc @player/*current-room*)
-       "\nExits: " (keys @(:exits @player/*current-room*)) "\n"
-       (str/join "\n" (map #(str "There is " % " here.\n")
-                           @(:items @player/*current-room*)))))
+  (str (:desc @*current-room*)
+       "\r\nExits: " (keys @(:exits @*current-room*)) "\r\n"
+       (join "\r\n" (map #(str "There is " % " here.\r\n")
+                           @(:items @*current-room*)))))
 
 (defn move
   "\"♬ We gotta get out of this place... ♪\" Give a direction."
   [direction]
   (dosync
-   (let [target-name ((:exits @player/*current-room*) (keyword direction))
-         target (@rooms/rooms target-name)]
-     (if target
+   (let [target-name ((:exits @*current-room*) (keyword direction))      ;;получить все выходы в исходной комнате и обозначить путь
+         target (@rooms target-name)]                                    ;; получение комнаты из списка
+     (if (not= @( :lock target) #{(some @( :lock target) @*inventory*)}) ;; Если замок не равен предменту из инвентаря то
+        (if (not= @( :lock target) #{})                                  ;;     (Если замок не равен пустане то
+           ( str "LOCK!!! Find an " @( :lock target) " to pass " )       ;;        выводим сообщение )
+        (if target                                                          ;;   Иначе переходим в комнату
+           (do
+             (move-between-refs *name*
+                                (:inhabitants @*current-room*)
+                                (:inhabitants target))
+             (ref-set *current-room* target)
+             (look))
+        "You can't go that way."))
+    (if target                                                            ;; Иначе преходим в комнату
        (do
-         (move-between-refs player/*name*
-                            (:inhabitants @player/*current-room*)
+         (move-between-refs *name*
+                            (:inhabitants @*current-room*)
                             (:inhabitants target))
-         (ref-set player/*current-room* target)
+         (ref-set *current-room* target)
          (look))
-       "You can't go that way."))))
+    "You can't go that way.")))))
 
 (defn grab
   "Pick something up."
   [thing]
   (dosync
-   (if (rooms/room-contains? @player/*current-room* thing)
+   (if (room-contains? @*current-room* thing)
      (do (move-between-refs (keyword thing)
-                            (:items @player/*current-room*)
-                            player/*inventory*)
+                            (:items @*current-room*)
+                            *inventory*)
          (str "You picked up the " thing "."))
      (str "There isn't any " thing " here."))))
 
 (defn discard
   "Put something down that you're carrying."
   [thing]
+  (if (= #{(keyword thing)} @( :lock @*current-room*))                              ;;Если вещь это ключ от замка, то ты
+   (str "Here you cannot throw " @( :lock @*current-room*))                         ;; то ты ее не выбросишь:)
   (dosync
-   (if (player/carrying? thing)
+   (if (carrying? thing)
      (do (move-between-refs (keyword thing)
-                            player/*inventory*
-                            (:items @player/*current-room*))
+                            *inventory*
+                            (:items @*current-room*))
          (str "You dropped the " thing "."))
-     (str "You're not carrying a " thing "."))))
+     (str "You're not carrying a " thing ".")))))
 
 (defn inventory
   "See what you've got."
   []
-  (str "You are carrying:\n"
-       (str/join "\n" (seq @player/*inventory*))))
+  (str "You are carrying:\r\n"
+       (join "\r\n" (seq @*inventory*))))
 
 (defn detect
   "If you have the detector, you can see which room an item is in."
   [item]
-  (if (@player/*inventory* :detector)
+  (if (@*inventory* :detector)
     (if-let [room (first (filter #((:items %) (keyword item))
-                                 (vals @rooms/rooms)))]
+                                 (vals @rooms)))]
       (str item " is in " (:name room))
       (str item " is not in any room."))
     "You need to be carrying the detector for that."))
@@ -75,18 +95,17 @@
 (defn say
   "Say something out loud so everyone in the room can hear."
   [& words]
-  (let [message (str/join " " words)]
-    (doseq [inhabitant (disj @(:inhabitants @player/*current-room*)
-                             player/*name*)]
-      (binding [*out* (player/streams inhabitant)]
+  (let [message (join " " words)]
+    (doseq [inhabitant (disj @(:inhabitants @*current-room*) *name*)]
+      (binding [*out* (streams inhabitant)]
         (println message)
-        (println player/prompt)))
+        (println prompt)))
     (str "You said " message)))
 
 (defn help
   "Show available commands and what they do."
   []
-  (str/join "\n" (map #(str (key %) ": " (:doc (meta (val %))))
+  (join "\r\n" (map #(str (key %) ": " (:doc (meta (val %))))
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
 
