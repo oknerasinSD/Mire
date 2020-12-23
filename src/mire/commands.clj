@@ -23,9 +23,9 @@
   []
   (str (:desc @*current-room*)
        "\r\nExits: " (keys @(:exits @*current-room*)) "\r\n"
-       (join "\r\n" (map #(str "There is " % " here.\r\n")
+       (join "\r\n" (map #(str "There " % "is here.\r\n")
                            @(:items @*current-room*)))
-       (join "\r\n" (map #(str "Player is " % " here.\r\n")
+       (join "\r\n" (map #(str "Player " % " is here.\r\n")
                            @(:inhabitants @*current-room*)))
   ))
 
@@ -115,7 +115,13 @@
 (defn attack
   "Show available commands and what they do."
   []
-  (str "your hp: " *healthpoints*)
+  (str "your hp: " *healthpoints* "\r\n"
+  					  (join "\r\n" (map #(str "Player " %1 " is here. And has " %2 " hp-s \r\n")
+                           @(:inhabitants @*current-room*)
+                           @(:inhabitants @*current-room*)))
+
+  					 )
+
   )
 
 ;; Command data
