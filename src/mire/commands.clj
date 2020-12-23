@@ -23,9 +23,9 @@
   []
   (str (:desc @*current-room*)
        "\r\nExits: " (keys @(:exits @*current-room*)) "\r\n"
-       (join "\r\n" (map #(str "There is " % " here.\r\n")
+       (join "\r\n" (map #(str "There " % "is here.\r\n")
                            @(:items @*current-room*)))
-       (join "\r\n" (map #(str "Player is " % " here.\r\n")
+       (join "\r\n" (map #(str "Player " % " is here.\r\n")
                            @(:inhabitants @*current-room*)))
   ))
 
@@ -33,12 +33,12 @@
   "\"♬ We gotta get out of this place... ♪\" Give a direction."
   [direction]
   (dosync
-   (let [target-name ((:exits @*current-room*) (keyword direction))      ;;получить все выходы в исходной комнате и обозначить путь
-         target (@rooms target-name)]                                    ;; получение комнаты из списка
-     (if (not= @( :lock target) #{(some @( :lock target) @*inventory*)}) ;; Если замок не равен предменту из инвентаря то
-        (if (not= @( :lock target) #{})                                  ;;     (Если замок не равен пустане то
-           ( str "LOCK!!! Find an " @( :lock target) " to pass " )       ;;        выводим сообщение )
-        (if target                                                          ;;   Иначе переходим в комнату
+   (let [target-name ((:exits @*current-room*) (keyword direction))      
+         target (@rooms target-name)]                                    
+     (if (not= @( :lock target) #{(some @( :lock target) @*inventory*)}) 
+        (if (not= @( :lock target) #{})                                  
+           ( str "LOCK!!! Find an " @( :lock target) " to pass " )       
+        (if target                                                          
            (do
              (move-between-refs *name*
                                 (:inhabitants @*current-room*)
@@ -46,7 +46,7 @@
              (ref-set *current-room* target)
              (look))
         "You can't go that way."))
-    (if target                                                            ;; Иначе преходим в комнату
+    (if target                                                            
        (do
          (move-between-refs *name*
                             (:inhabitants @*current-room*)
@@ -69,8 +69,8 @@
 (defn discard
   "Put something down that you're carrying."
   [thing]
-  (if (= #{(keyword thing)} @( :lock @*current-room*))                              ;;Если вещь это ключ от замка, то ты
-   (str "Here you cannot throw " @( :lock @*current-room*))                         ;; то ты ее не выбросишь:)
+  (if (= #{(keyword thing)} @( :lock @*current-room*))                              
+   (str "Here you cannot throw " @( :lock @*current-room*))                         
   (dosync
    (if (carrying? thing)
      (do (move-between-refs (keyword thing)
@@ -115,7 +115,13 @@
 (defn attack
   "Show available commands and what they do."
   []
-  (str "your hp: " *healthpoints*)
+  (str "your hp: " *healthpoints* "\r\n"
+  					  (join "\r\n" (map #(str "Player " %1 " is here. And has " %2 " hp-s \r\n")
+                           @(:inhabitants @*current-room*)
+                           @(:inhabitants @*current-room*)))
+
+  					 )
+
   )
 
 ;; Command data
