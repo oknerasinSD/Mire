@@ -24,7 +24,10 @@
   (str (:desc @*current-room*)
        "\r\nExits: " (keys @(:exits @*current-room*)) "\r\n"
        (join "\r\n" (map #(str "There is " % " here.\r\n")
-                           @(:items @*current-room*)))))
+                           @(:items @*current-room*)))
+       (join "\r\n" (map #(str "Player is " % " here.\r\n")
+                           @(:inhabitants @*current-room*)))
+  ))
 
 (defn move
   "\"♬ We gotta get out of this place... ♪\" Give a direction."
