@@ -3,7 +3,7 @@
 (def ^:dynamic *current-room*)
 (def ^:dynamic *inventory*)
 (def ^:dynamic *name*)
-(def ^:dynamic *healthpoints*)
+(def ^:dynamic *healthpoints* 5)
 
 (def prompt "> ")
 (def streams (ref {}))
