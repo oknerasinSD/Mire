@@ -101,7 +101,7 @@
   (let [message (join " " words)]
     (doseq [inhabitant (disj @(:inhabitants @*current-room*) *name*)]
       (binding [*out* (streams inhabitant)]
-        (println message)
+        (println *name* " : " message)
         (println prompt)))
     (str "You said " message)))
 
@@ -111,6 +111,12 @@
   (join "\r\n" (map #(str (key %) ": " (:doc (meta (val %))))
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
+
+(defn attack
+  "Show available commands and what they do."
+  [name]
+
+  )
 
 ;; Command data
 
@@ -125,7 +131,8 @@
                "detect" detect
                "look" look
                "say" say
-               "help" help})
+               "help" help
+               "attack" attack})
 
 ;; Command handling
 
