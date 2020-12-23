@@ -111,8 +111,8 @@
 
 (defn attack
   "Show available commands and what they do."
-  [name]
-
+  []
+  (str "your hp: " *healthpoints*)
   )
 
 ;; Command data
