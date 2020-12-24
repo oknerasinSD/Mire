@@ -1,5 +1,5 @@
 (ns mire.commands
-  (:use [mire.rooms :only [rooms room-contains?]]
+  (:use [mire.rooms :only [rooms room-contains? room-contains-gold?]]
         [mire.player])
   (:use [clojure.string :only [join]]))
 
@@ -27,6 +27,7 @@
                            @(:items @*current-room*)))
        (join "\r\n" (map #(str "Player " % " is here.\r\n")
                            @(:inhabitants @*current-room*)))
+       (join (str "GOLD " @(:gold @*current-room*) " here.\r\n"))
   ))
 
 (defn move
@@ -59,12 +60,44 @@
   "Pick something up."
   [thing]
   (dosync
-   (if (room-contains? @*current-room* thing)
-     (do (move-between-refs (keyword thing)
-                            (:items @*current-room*)
-                            *inventory*)
-         (str "You picked up the " thing "."))
-     (str "There isn't any " thing " here."))))
+    (if (or (= thing "coin") (= thing "treasuregold") (= thing "bagmoney"))
+      (if (room-contains-gold? @*current-room* thing)
+        (do
+          (case thing
+            "coin" (alter *money* inc)
+            "bagmoney" (alter *money* + 7)
+            "treasuregold" (alter *money* + 15)
+          )
+          (if (= ((keyword thing) @(:gold @*current-room*)) 1)
+            (alter (:gold @*current-room*) dissoc (keyword thing))
+            (do
+              (def temp-gold ((keyword thing) @(:gold @*current-room*)))
+              (alter (:gold @*current-room*) dissoc (keyword thing))
+              (alter (:gold @*current-room*) assoc (keyword thing) (- temp-gold 1))
+            )
+          )
+          (str "You picked up the " thing ".")
+        )
+        (str "There isn't any " thing " here.")
+      )
+      (if (room-contains? @*current-room* thing)
+        (do
+          (move-between-refs (keyword thing)
+                             (:items @*current-room*)
+                             *inventory*)
+          (str "You picked up the " thing ".")
+        )
+        (str "There isn't any " thing " here.")
+      )
+    )
+  )
+)
+
+(defn seemoney
+  "See your money"
+  []
+  (str (join "\r\n" (map #(str "Money is " % " .\r\n") [(str @*money*)])))
+)
 
 (defn discard
   "Put something down that you're carrying."
@@ -72,12 +105,57 @@
   (if (= #{(keyword thing)} @( :lock @*current-room*))                              
    (str "Here you cannot throw " @( :lock @*current-room*))                         
   (dosync
-   (if (carrying? thing)
-     (do (move-between-refs (keyword thing)
-                            *inventory*
-                            (:items @*current-room*))
-         (str "You dropped the " thing "."))
-     (str "You're not carrying a " thing ".")))))
+   (if (or (= thing "coin") (= thing "treasuregold") (= thing "bagmoney"))
+        (case thing
+          "coin" (if (> @*money* 0)
+                    (do
+                      (alter *money* dec)
+                      (if (room-contains-gold? @*current-room* thing)
+                        (def temp-gold ((keyword thing) @(:gold @*current-room*)))
+                        (def temp-gold 0)
+                      )
+                      (alter (:gold @*current-room*) assoc (keyword thing) (+ temp-gold 1))
+                      (str "You dropped the " (keyword thing) ".")
+                    )
+                    (str "Not enough money!")
+                  )
+          "bagmoney" (if (> @*money* 7)
+                        (do
+                          (alter *money* - 5)
+                          (if (room-contains-gold? @*current-room* thing)
+                            (def temp-gold ((keyword thing) @(:gold @*current-room*)))
+                            (def temp-gold 0)
+                          )
+                          (alter (:gold @*current-room*) assoc (keyword thing) (+ temp-gold 1))
+                          (str "You dropped the " (keyword thing) ".")
+                        )
+                        (str "Not enough money!")
+                      )
+          "treasuregold" (if (> @*money* 15)
+                        (do
+                          (alter *money* - 15)
+                          (if (room-contains-gold? @*current-room* thing)
+                            (def temp-gold ((keyword thing) @(:gold @*current-room*)))
+                            (def temp-gold 0)
+                          )
+                          (alter (:gold @*current-room*) assoc (keyword thing) (+ temp-gold 1))
+                          (str "You dropped the " (keyword thing) ".")
+                        )
+                        (str "Not enough money!")
+                      )
+        )
+        (if (carrying? thing)
+          (do (move-between-refs (keyword thing)
+                                 *inventory*
+                                 (:items @*current-room*))
+              (str "You dropped the " thing ".")
+          )
+          (str "You're not carrying a " thing ".")
+        )
+      )
+    )
+  )
+)
 
 (defn inventory
   "See what you've got."
@@ -132,6 +210,7 @@
                "east" (fn [] (move :east)),
                "west" (fn [] (move :west)),
                "grab" grab
+               "seemoney" seemoney
                "discard" discard
                "inventory" inventory
                "detect" detect
