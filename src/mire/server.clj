@@ -21,6 +21,7 @@
         (recur (read-line)))
     name))
 
+
 (defn- mire-handle-client [in out]
   (binding [*in* (io/reader in)
             *out* (io/writer out)
@@ -29,9 +30,11 @@
     ;; We have to nest this in another binding call instead of using
     ;; the one above so *in* and *out* will be bound to the socket
     (print "\nWhat is your name? ") (flush)
+    (def Money 0)
     (binding [player/*name* (get-unique-player-name (read-line))
               player/*current-room* (ref (@rooms/rooms :fsittingroom))
               player/*inventory* (ref #{})
+              player/*money* (ref Money)
               ]
       (dosync
        (commute (:inhabitants @player/*current-room*) conj player/*name*)
