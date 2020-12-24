@@ -10,6 +10,8 @@
             :desc (:desc room)
             :exits (ref (:exits room))
             :gold (ref (:gold room))
+            :trash (ref (:trash room))
+            :loot (ref (:loot room))
             :items (ref (or (:items room) #{}))
             :lock (ref (or (:lock room) #{}))
             :inhabitants (ref #{})}})))
@@ -40,3 +42,7 @@
 (defn room-contains-gold?
   [room thing]
   (contains? @(:gold room) (keyword thing)))
+
+(defn room-contains-loot?
+  [room thing]
+  (contains? @(:loot room) (keyword thing)))

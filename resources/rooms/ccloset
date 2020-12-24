@@ -1,3 +1,2 @@
 {:desc "You are in a cramped closet."
- :exits {:south :fsittingroom}
- :items #{:sword}}
+ :exits {:south :fsittingroom}}
