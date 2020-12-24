@@ -28,7 +28,8 @@
        (join "\r\n" (map #(str "Player " % " is here.\r\n")
                            @(:inhabitants @*current-room*)))
        (join (str "GOLD " @(:gold @*current-room*) " here.\r\n"))
-       (join (str "loot: " @(:loot @*current-room*) " here.\r\n"))
+       (join (str "health: " (@health *name*) ".\r\n")) 
+       (join (str "score: " (@scores *name*) ".\r\n"))
   ))
 
 (defn move
@@ -194,17 +195,17 @@
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
 
-(defn attack
-  "Show available commands and what they do."
-  []
-  (str "your hp: " *healthpoints* "\r\n"
-  					  (join "\r\n" (map #(str "Player " %1 " is here. And has " %2 " hp-s \r\n")
-                           @(:inhabitants @*current-room*)
-                           @(:inhabitants @*current-room*)))
+; (defn attack
+;   "Show available commands and what they do."
+;   []
+;   (str "your hp: " *healthpoints* "\r\n"
+;   					  (join "\r\n" (map #(str "Player " %1 " is here. And has " %2 " hp-s \r\n")
+;                            @(:inhabitants @*current-room*)
+;                            @(:inhabitants @*current-room*)))
 
-  					 )
+;   					 )
 
-  )
+;   )
 
 (defn buy 
 		"Buy loot from any place"
@@ -245,7 +246,7 @@
                "look" look
                "say" say
                "help" help
-               "attack" attack
+               ;"attack" attack
                "buy" buy})
 
 ;; Command handling
