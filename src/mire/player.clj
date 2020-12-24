@@ -5,9 +5,11 @@
 (def ^:dynamic *name*)
 (def ^:dynamic *healthpoints* 5)
 (def ^:dynamic *money*)
+(def ^:dynamic *loot*)
 
 (def prompt "> ")
 (def streams (ref {}))
+
 
 (defn carrying? [thing]
   (some #{(keyword thing)} @*inventory*))

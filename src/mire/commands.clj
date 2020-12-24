@@ -1,5 +1,5 @@
 (ns mire.commands
-  (:use [mire.rooms :only [rooms room-contains? room-contains-gold?]]
+  (:use [mire.rooms :only [rooms room-contains? room-contains-gold? room-contains-loot?]]
         [mire.player])
   (:use [clojure.string :only [join]]))
 
@@ -23,11 +23,12 @@
   []
   (str (:desc @*current-room*)
        "\r\nExits: " (keys @(:exits @*current-room*)) "\r\n"
-       (join "\r\n" (map #(str "There " % "is here.\r\n")
+       (join "\r\n" (map #(str "There " % " is here.\r\n")
                            @(:items @*current-room*)))
        (join "\r\n" (map #(str "Player " % " is here.\r\n")
                            @(:inhabitants @*current-room*)))
        (join (str "GOLD " @(:gold @*current-room*) " here.\r\n"))
+       (join (str "loot: " @(:loot @*current-room*) " here.\r\n"))
   ))
 
 (defn move
@@ -76,10 +77,13 @@
               (alter (:gold @*current-room*) assoc (keyword thing) (- temp-gold 1))
             )
           )
-          (str "You picked up the " thing ".")
+          (str " You picked up the " thing ".")
         )
-        (str "There isn't any " thing " here.")
+        (str " There isn't any " thing " here.")
       )
+
+
+
       (if (room-contains? @*current-room* thing)
         (do
           (move-between-refs (keyword thing)
@@ -119,7 +123,7 @@
                     )
                     (str "Not enough money!")
                   )
-          "bagmoney" (if (> @*money* 7)
+          "bagmoney" (if (>= @*money* 7)
                         (do
                           (alter *money* - 5)
                           (if (room-contains-gold? @*current-room* thing)
@@ -131,7 +135,7 @@
                         )
                         (str "Not enough money!")
                       )
-          "treasuregold" (if (> @*money* 15)
+          "treasuregold" (if (>= @*money* 15)
                         (do
                           (alter *money* - 15)
                           (if (room-contains-gold? @*current-room* thing)
@@ -202,6 +206,30 @@
 
   )
 
+(defn buy 
+		"Buy loot from any place"
+		[loot]
+		(dosync
+    (if (or (= loot "sword"))
+        			(do
+			          (case loot
+			            "sword" 
+			            (if (> @*money* 7)
+			            		(do
+			            		(move-between-refs (keyword loot)
+			                             		(:items @*current-room*)
+			                             		*inventory*)
+			            		(alter *money* - 7)
+			           			(str "You bought the " loot ".")
+			           			)
+			      						)
+      							)
+											)
+					(str "There is no " loot " in the shop.")
+			)
+	)
+)
+
 ;; Command data
 
 (def commands {"move" move,
@@ -217,7 +245,8 @@
                "look" look
                "say" say
                "help" help
-               "attack" attack})
+               "attack" attack
+               "buy" buy})
 
 ;; Command handling
 
