@@ -40,7 +40,7 @@
        (commute (:inhabitants @player/*current-room*) conj player/*name*)
        (commute player/streams assoc player/*name* *out*)
        (commute player/health assoc player/*name* 100)
-       (commute player/scores assoc player/*name* 0))
+       (commute player/score assoc player/*name* 0))
       (println (commands/look)) (print player/prompt) (flush)
 
       (try (loop [input (read-line)]

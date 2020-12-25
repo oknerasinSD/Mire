@@ -13,9 +13,6 @@
   [obj from]
   (alter from disj obj))
 
-
-
-
 ;; Command functions
 
 (defn look
@@ -29,7 +26,7 @@
                            @(:inhabitants @*current-room*)))
        (join (str "GOLD " @(:gold @*current-room*) " here.\r\n"))
        (join (str "health: " (@health *name*) ".\r\n")) 
-       (join (str "score: " (@scores *name*) ".\r\n"))
+       (join (str "score: " (@score *name*) ".\r\n"))
   ))
 
 (defn move
@@ -40,7 +37,7 @@
          target (@rooms target-name)]                                    
      (if (not= @( :lock target) #{(some @( :lock target) @*inventory*)}) 
         (if (not= @( :lock target) #{})                                  
-           ( str "LOCK!!! Find an " @( :lock target) " to pass " )       
+           ( str "LOCK! Find an " @( :lock target) " to pass " )       
         (if target                                                          
            (do
              (move-between-refs *name*
@@ -66,9 +63,12 @@
       (if (room-contains-gold? @*current-room* thing)
         (do
           (case thing
-            "coin" (alter *money* inc)
-            "bagmoney" (alter *money* + 7)
-            "treasuregold" (alter *money* + 15)
+            "coin"
+            (do (alter *money* inc) (change-points 1))
+            "bagmoney" 
+            (do (alter *money* + 7) (change-points 7))
+            "treasuregold" 
+            (do (alter *money* + 15) (change-points 15))
           )
           (if (= ((keyword thing) @(:gold @*current-room*)) 1)
             (alter (:gold @*current-room*) dissoc (keyword thing))
@@ -115,6 +115,7 @@
           "coin" (if (> @*money* 0)
                     (do
                       (alter *money* dec)
+                      (change-points -1)
                       (if (room-contains-gold? @*current-room* thing)
                         (def temp-gold ((keyword thing) @(:gold @*current-room*)))
                         (def temp-gold 0)
@@ -126,7 +127,8 @@
                   )
           "bagmoney" (if (>= @*money* 7)
                         (do
-                          (alter *money* - 5)
+                          (alter *money* - 7)
+                          (change-points -7)
                           (if (room-contains-gold? @*current-room* thing)
                             (def temp-gold ((keyword thing) @(:gold @*current-room*)))
                             (def temp-gold 0)
@@ -139,6 +141,7 @@
           "treasuregold" (if (>= @*money* 15)
                         (do
                           (alter *money* - 15)
+                          (change-points -15)
                           (if (room-contains-gold? @*current-room* thing)
                             (def temp-gold ((keyword thing) @(:gold @*current-room*)))
                             (def temp-gold 0)
@@ -195,17 +198,15 @@
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
 
-; (defn attack
-;   "Show available commands and what they do."
-;   []
-;   (str "your hp: " *healthpoints* "\r\n"
-;   					  (join "\r\n" (map #(str "Player " %1 " is here. And has " %2 " hp-s \r\n")
-;                            @(:inhabitants @*current-room*)
-;                            @(:inhabitants @*current-room*)))
-
-;   					 )
-
-;   )
+(defn attack 
+  "Attack other player"
+  [target]
+  (dosync
+    (if (contains? @health target)
+      (do
+        (commute health assoc target (- (@health target) damage))
+        "Attack was successful.")
+      "Target don't exist.")))
 
 (defn buy 
 		"Buy loot from any place"
@@ -246,7 +247,7 @@
                "look" look
                "say" say
                "help" help
-               ;"attack" attack
+               "attack" attack
                "buy" buy})
 
 ;; Command handling
