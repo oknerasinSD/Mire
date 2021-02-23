@@ -198,24 +198,31 @@
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
 
-(defn attack 
+(defn attack
   "Attack other player"
   [target]
   (dosync
     (if (contains? @health target)
-      (do
-        (commute health assoc target (- (@health target) damage))
-        "Attack was successful.")
-      "Target don't exist.")))
+      (if (contains? @(:inhabitants @*current-room*) target)
+        (do
+          (commute health assoc target (- (@health target) damage))
+          "Successful attack."
+        )
+        "No such target in the room."
+      )
+      "Target doesn't exist."
+    )
+  )
+)
 
-(defn buy 
+(defn buy
 		"Buy loot from any place"
 		[loot]
 		(dosync
     (if (or (= loot "sword"))
         			(do
 			          (case loot
-			            "sword" 
+			            "sword"
 			            (if (> @*money* 7)
 			            		(do
 			            		(move-between-refs (keyword loot)
