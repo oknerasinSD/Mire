@@ -11,6 +11,7 @@
 (def streams (ref {}))
 (def health (ref {}))
 (def score (ref {}))
+(def lives (ref {}))
 
 (defn carrying? [thing]
   (some #{(keyword thing)} @*inventory*))
