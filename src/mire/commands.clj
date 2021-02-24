@@ -215,12 +215,19 @@
     (if (contains? @health target)
       (if (contains? @(:inhabitants @*current-room*) target)
         (do
+          (if (not= (@lives target) "dead")
+
+            (do
           (commute health assoc target (- (@health target) damage))
           (if (< (int(@health target)) 1)
            ((commute lives assoc target "dead")
-           (print
-          (say (str target " killed by " *name* "\r\n"))))  )
-          "Successful attack."
+           (println
+          (say (str target " killed by " *name* "\r\n")))
+          (commute score assoc *name* (+ (@score *name*) 25)))
+          )
+
+          "Successful attack.")
+          "He is dead")
         )
         "No such target in the room."
       )
@@ -256,7 +263,9 @@
 ;; Command data
 (defn deadplayer
   []
-  "You are dead")
+  (str "You are dead \r\n"
+  "You score:" (@score *name*) "\r\n"
+  ))
 
 (def commands
               {"move" move,
