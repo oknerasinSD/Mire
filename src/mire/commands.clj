@@ -25,20 +25,29 @@
        (join "\r\n" (map #(str "Player " % " is here.\r\n")
                            @(:inhabitants @*current-room*)))
        (join (str "GOLD " @(:gold @*current-room*) " here.\r\n"))
-       (join (str "health: " (@health *name*) ".\r\n")) 
+       (join (str "health: " (@health *name*) ".\r\n"))
        (join (str "score: " (@score *name*) ".\r\n"))
+       (join (str "live: " (@lives *name*) ".\r\n"))
   ))
 
+(defn players []
+  "Get a list players"
+  (str
+      (doseq [inhabitant (keys @streams)]
+         (println (str inhabitant ":" (@lives inhabitant)))
+    )
+
+  ))
 (defn move
   "\"♬ We gotta get out of this place... ♪\" Give a direction."
   [direction]
   (dosync
-   (let [target-name ((:exits @*current-room*) (keyword direction))      
-         target (@rooms target-name)]                                    
-     (if (not= @( :lock target) #{(some @( :lock target) @*inventory*)}) 
-        (if (not= @( :lock target) #{})                                  
-           ( str "LOCK! Find an " @( :lock target) " to pass " )       
-        (if target                                                          
+   (let [target-name ((:exits @*current-room*) (keyword direction))
+         target (@rooms target-name)]
+     (if (not= @( :lock target) #{(some @( :lock target) @*inventory*)})
+        (if (not= @( :lock target) #{})
+           ( str "LOCK! Find an " @( :lock target) " to pass " )
+        (if target
            (do
              (move-between-refs *name*
                                 (:inhabitants @*current-room*)
@@ -46,7 +55,7 @@
              (ref-set *current-room* target)
              (look))
         "You can't go that way."))
-    (if target                                                            
+    (if target
        (do
          (move-between-refs *name*
                             (:inhabitants @*current-room*)
@@ -65,9 +74,9 @@
           (case thing
             "coin"
             (do (alter *money* inc) (change-points 1))
-            "bagmoney" 
+            "bagmoney"
             (do (alter *money* + 7) (change-points 7))
-            "treasuregold" 
+            "treasuregold"
             (do (alter *money* + 15) (change-points 15))
           )
           (if (= ((keyword thing) @(:gold @*current-room*)) 1)
@@ -107,8 +116,8 @@
 (defn discard
   "Put something down that you're carrying."
   [thing]
-  (if (= #{(keyword thing)} @( :lock @*current-room*))                              
-   (str "Here you cannot throw " @( :lock @*current-room*))                         
+  (if (= #{(keyword thing)} @( :lock @*current-room*))
+   (str "Here you cannot throw " @( :lock @*current-room*))
   (dosync
    (if (or (= thing "coin") (= thing "treasuregold") (= thing "bagmoney"))
         (case thing
@@ -206,6 +215,10 @@
       (if (contains? @(:inhabitants @*current-room*) target)
         (do
           (commute health assoc target (- (@health target) damage))
+          (if (< (int(@health target)) 1)
+           ((commute lives assoc target "dead")
+           (print
+          (say (str target " killed by " *name* "\r\n"))))  )
           "Successful attack."
         )
         "No such target in the room."
@@ -253,6 +266,7 @@
                "detect" detect
                "look" look
                "say" say
+               "players" players
                "help" help
                "attack" attack
                "buy" buy})
