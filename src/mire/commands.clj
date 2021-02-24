@@ -30,10 +30,11 @@
        (join (str "live: " (@lives *name*) ".\r\n"))
   ))
 
-(defn players []
+(defn players
   "Get a list players"
+  []
   (str
-      (doseq [inhabitant (keys @streams)]
+      (doseq [inhabitant (keys @lives)]
          (println (str inhabitant ":" (@lives inhabitant)))
     )
 
@@ -253,8 +254,12 @@
 )
 
 ;; Command data
+(defn deadplayer
+  []
+  "You are dead")
 
-(def commands {"move" move,
+(def commands
+              {"move" move,
                "north" (fn [] (move :north)),
                "south" (fn [] (move :south)),
                "east" (fn [] (move :east)),
@@ -269,7 +274,8 @@
                "players" players
                "help" help
                "attack" attack
-               "buy" buy})
+               "buy" buy
+               "deadplayer" deadplayer})
 
 ;; Command handling
 
