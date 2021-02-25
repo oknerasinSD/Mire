@@ -5,6 +5,7 @@
 (def ^:dynamic *name*)
 (def ^:dynamic *money*)
 (def ^:dynamic *loot*)
+(def ^:dynamic *arrows* (ThreadLocal.))
 
 (def damage 25)
 (def prompt "> ")
