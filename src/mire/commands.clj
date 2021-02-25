@@ -224,9 +224,9 @@
   (dosync
     (if (contains? @health target)
       (if (contains? @(:inhabitants @*current-room*) target)
+        (if (not= target player/*name*)
         (do
           (if (not= (@lives target) "dead")
-
             (do
           (commute health assoc target (- (@health target) damage))
           (if (< (int(@health target)) 1)
@@ -235,9 +235,10 @@
           (say (str target " killed by " *name* "\r\n")))
           (commute score assoc *name* (+ (@score *name*) 25)))
           )
-
           "Successful attack.")
           "He is dead")
+        )
+        "You can't attack yourself."
         )
         "No such target in the room."
       )
@@ -254,10 +255,13 @@
       (if (> (.get player/*arrows*) 0)
         (if (contains? @health target)
           (if (contains? @(:inhabitants @*current-room*) target)
+            (if (not= target player/*name*)
             (do
               (commute health assoc target (- (@health target) 50))
               (.set player/*arrows* (- (.get player/*arrows*) 1))
               "Great shot!"
+            )
+            "You can't shoot yourself."
             )
             "No such target in the room."
           )
