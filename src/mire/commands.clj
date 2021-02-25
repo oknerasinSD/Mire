@@ -301,6 +301,20 @@
   "You score:" (@score *name*) "\r\n"
   ))
 
+(defn heal []
+  "If you have medkit, you can heal yourself."
+  (dosync
+    (if (player/carrying? :medkit)
+     (do
+       (commute health assoc player/*name* 100)
+       (alter player/*inventory* disj :medkit)
+       (println "Stand up and fight!")
+     )
+     (println "You don't have a medkit.")
+    )
+  )
+)
+
 (def commands
               {"move" move,
                "north" (fn [] (move :north)),
@@ -320,6 +334,7 @@
                "buy" buy
                "deadplayer" deadplayer
                "shoot" shoot
+               "heal" heal
                })
 
 ;; Command handling
