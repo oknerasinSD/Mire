@@ -40,15 +40,25 @@
        (commute (:inhabitants @player/*current-room*) conj player/*name*)
        (commute player/streams assoc player/*name* *out*)
        (commute player/health assoc player/*name* 100)
-       (commute player/score assoc player/*name* 0))
+       (commute player/score assoc player/*name* 0)
+       (commute player/lives assoc player/*name* "live"))
       (println (commands/look)) (print player/prompt) (flush)
 
       (try (loop [input (read-line)]
-             (when input
-               (println (commands/execute input))
-               (.flush *err*)
-               (print player/prompt) (flush)
-               (recur (read-line))))
+            (if (<(int (@player/health player/*name*)) 1)
+
+            (when true
+              (cleanup)
+              (println (commands/execute "deadplayer"))
+              (.flush *err*)
+              (print player/prompt) (flush)
+              (recur (read-line)))
+
+            (when input
+              (println (commands/execute input))
+              (.flush *err*)
+              (print player/prompt) (flush)
+              (recur (read-line)))))
            (finally (cleanup))))))
 
 (defn -main
