@@ -257,9 +257,18 @@
           (if (contains? @(:inhabitants @*current-room*) target)
             (if (not= target player/*name*)
             (do
-              (commute health assoc target (- (@health target) 50))
-              (.set player/*arrows* (- (.get player/*arrows*) 1))
-              "Great shot!"
+              (if (not= (@lives target) "dead")
+                (do
+                  (commute health assoc target (- (@health target) 50))
+                  (.set player/*arrows* (- (.get player/*arrows*) 1))
+                  (if (< (int(@health target)) 1)
+                   ((commute lives assoc target "dead")
+                   (println
+                  (say (str target " killed by " *name* "\r\n")))
+                  (commute score assoc *name* (+ (@score *name*) 25)))
+                  )
+              "Great shot!")
+              "He is dead")
             )
             "You can't shoot yourself."
             )
