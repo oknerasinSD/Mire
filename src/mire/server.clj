@@ -43,6 +43,7 @@
        (commute player/score assoc player/*name* 0)
        (commute player/lives assoc player/*name* "live"))
        (.set player/*arrows* 0)
+       (.set player/*bullet* 0)
       (println (commands/look)) (print player/prompt) (flush)
 
       (try (loop [input (read-line)]

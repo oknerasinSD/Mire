@@ -283,6 +283,74 @@
   )
 )
 
+(defn gun-shoot
+  "Gun shoot to another player"
+  [target]
+  (dosync
+    (if (player/carrying? :gun)
+      (if (> (.get player/*bullet*) 0)
+        (if (contains? @health target)
+          (if (contains? @(:inhabitants @*current-room*) target)
+            (if (not= target player/*name*)
+            (do
+              (if (not= (@lives target) "dead")
+                (do
+                  (commute health assoc target (- (@health target) 65))
+                  (.set player/*bullet* (- (.get player/*bullet*) 1))
+                  (if (< (int(@health target)) 1)
+                   ((commute lives assoc target "dead")
+                   (println
+                  (say (str target " killed by " *name* "\r\n")))
+                  (commute score assoc *name* (+ (@score *name*) 15)))
+                  )
+              "Great gun shot!")
+              "He is dead")
+            )
+            "You can't gun shoot yourself."
+            )
+            "No such target in the room."
+          )
+          "Target doesn't exist."
+        )
+        "Sorry, you don't have bullets."
+      )
+      "Man you don't have a gun."
+    )
+  )
+)
+
+(defn stab
+  "Stab other player"
+  [target]
+  (dosync
+    (if (player/carrying? :knife)
+      (if (contains? @health target)
+        (if (contains? @(:inhabitants @*current-room*) target)
+          (if (not= target player/*name*)
+          (do
+            (if (not= (@lives target) "dead")
+              (do
+            (commute health assoc target (- (@health target) 10))
+            (if (< (int(@health target)) 1)
+             ((commute lives assoc target "dead")
+             (println
+            (say (str target " killed by " *name* "\r\n")))
+            (commute score assoc *name* (+ (@score *name*) 10)))
+            )
+            "Successful knife attack.")
+            "He is dead")
+          )
+          "You can't stab yourself."
+          )
+          "No such target in the room."
+        )
+        "Target doesn't exist."
+      )
+    "Hey you don't have knife."
+    )
+  )
+)
+
 (defn buy
 		"Buy loot from any place"
 		[loot]
@@ -348,7 +416,10 @@
                "deadplayer" deadplayer
                "shoot" shoot
                "heal" heal
+               "gun-shoot" gun-shoot
+               "stab" stab
                })
+
 
 ;; Command handling
 
