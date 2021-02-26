@@ -396,6 +396,30 @@
   )
 )
 
+(defn eat []
+  "If you have soup, you can eat it and heal yourself."
+  (dosync
+    (if (player/carrying? :soup)
+     (do
+      (commute health assoc player/*name* (+ (@health player/*name*) 30))
+      (overhealed)
+       (alter player/*inventory* disj :soup)
+       (println "Bon apetite!")
+     )
+     (println "You don't have a soup.")
+    )
+  )
+)
+
+(defn sleep []
+  "If you are tired you can sleep. Sweet dreams!"
+  (dosync
+      (commute health assoc player/*name* (+ (@health player/*name*) 10))
+       (println "Wake up! It's time to fight...")
+    )
+)
+
+
 (def commands
               {"move" move,
                "north" (fn [] (move :north)),
@@ -418,6 +442,8 @@
                "heal" heal
                "gun-shoot" gun-shoot
                "stab" stab
+               "eat" eat
+               "sleep" sleep
                })
 
 

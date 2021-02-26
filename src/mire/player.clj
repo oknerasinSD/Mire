@@ -22,3 +22,25 @@
   "Add points to current player"
   (dosync
     (commute score assoc *name* (+ (@score *name*) points))))
+
+(defn set-health-value [target value]
+  "Set player's health value"
+  (dosync
+    (if (contains? @health target)
+      (do
+         (commute health assoc target value)
+          true
+      )
+      false
+    )
+  )
+)
+
+(defn overhealed []
+  "Check if player's health is over 100"
+   (dosync
+     (if (> (@health *name*) 100)
+       (set-health-value *name* 100)
+     )
+   )
+)
