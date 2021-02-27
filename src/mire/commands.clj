@@ -264,8 +264,8 @@
                   (if (< (int(@health target)) 1)
                    ((commute lives assoc target "dead")
                    (println
-                  (say (str target " killed by " *name* "\r\n")))
-                  (commute score assoc *name* (+ (@score *name*) 25)))
+                  (say (str target " killed by " player/*name* "\r\n")))
+                  (commute score assoc player/*name* (+ (@score player/*name*) 25)))
                   )
               "Great shot!")
               "He is dead")
@@ -300,8 +300,8 @@
                   (if (< (int(@health target)) 1)
                    ((commute lives assoc target "dead")
                    (println
-                  (say (str target " killed by " *name* "\r\n")))
-                  (commute score assoc *name* (+ (@score *name*) 15)))
+                  (say (str target " killed by " player/*name* "\r\n")))
+                  (commute score assoc player/*name* (+ (@score player/*name*) 15)))
                   )
               "Great gun shot!")
               "He is dead")
@@ -334,8 +334,8 @@
             (if (< (int(@health target)) 1)
              ((commute lives assoc target "dead")
              (println
-            (say (str target " killed by " *name* "\r\n")))
-            (commute score assoc *name* (+ (@score *name*) 10)))
+            (say (str target " killed by " player/*name* "\r\n")))
+            (commute score assoc player/*name* (+ (@score player/*name*) 10)))
             )
             "Successful knife attack.")
             "He is dead")
@@ -373,6 +373,75 @@
 					(str "There is no " loot " in the shop.")
 			)
 	)
+)
+
+(defn buy2 ;;функция
+		"Buy loot from any place"
+		[thing] ;;аргумент
+		(dosync										;; открытие транзакции
+    (if (or (= thing "sword") (= thing "poison") (= thing "bow"))				;;если аргумент один из этих слов
+      (if (room-contains-loot? @*current-room* thing)	;;и в комнате есть этот предмет
+        (do ;; операторная скобка открылась
+          (case thing			;; открыли кейс для каждого предмета разный
+            "sword"
+            (if (>= @*money* 7);; проверили монетки у игрока
+			            		(if (= ((keyword thing) @(:loot @*current-room*)) 1)	;;если аргумент функции совпадает с имеющимся в комнате с лутом
+			            						(do
+									            		(move-between-refs (keyword thing)			;;перемещаем предмет thing между итемсом комнаты и инвентарем игрока
+			                             		(:items @*current-room*)
+			                             		*inventory*)
+										            	(alter *money* - 7);; меняем деньги
+									              (def temp-gold ((keyword thing) @(:loot @*current-room*)));;temp-gold узнает сколько таких предметов в комнате
+									              (alter (:loot @*current-room*) dissoc (keyword thing)) ;; отсоединяем от map лута запись(ключ значение) с таким же типом как и inventory
+									              (alter (:loot @*current-room*) assoc (keyword thing) (- temp-gold 1));; Присоединяем к map лута запись(ключ значение) с таким же типом как и thing и колиеством как темп-голд -1
+									              (str "You bought the " thing ".") ;;уведомление
+									            )
+
+									            (str "There is no " thing " in the shop");; это елсе у if  c keyword
+									          )
+			           			(str "There is no enough money");; это елсе у if с количеством денег
+			      			)
+
+            "bow"
+            (if (>= @*money* 15)
+			            		(if (= ((keyword thing) @(:loot @*current-room*)) 1)
+			            						(do
+									            		(move-between-refs (keyword thing)
+			                             		(:items @*current-room*)
+			                             		*inventory*)
+										            	(alter *money* - 15)
+									              (def temp-gold ((keyword thing) @(:loot @*current-room*)))
+									              (alter (:loot @*current-room*) dissoc (keyword thing))
+									              (alter (:loot @*current-room*) assoc (keyword thing) (- temp-gold 1))
+									              (str "You bought the " thing ".")
+									            )
+									          )
+			           			(str "There is no enough money")
+			      			)
+
+
+            "poison"
+            (if (>= @*money* 3)
+			            		(if (= ((keyword thing) @(:loot @*current-room*)) 1)
+			            						(do
+									            		(move-between-refs (keyword thing)
+			                             		(:items @*current-room*)
+			                             		*inventory*)
+										            	(alter *money* - 3)
+									              (def temp-gold ((keyword thing) @(:loot @*current-room*)))
+									              (alter (:loot @*current-room*) dissoc (keyword thing))
+									              (alter (:loot @*current-room*) assoc (keyword thing) (- temp-gold 1))
+									              (str "You bought the " thing ".")
+									            )
+									          )
+			           			(str "There is no enough money")
+			      			)
+          )
+        )
+        (str " There is no any " thing " here.")
+      )
+    )
+  )
 )
 
 ;; Command data
